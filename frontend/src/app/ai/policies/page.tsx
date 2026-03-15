@@ -1,8 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { apiWithSession } from "@/lib/api";
 
 interface Policy {
   id: number;
@@ -17,7 +15,6 @@ interface Policy {
 }
 
 export default function AIPoliciesPage() {
-  const { data: session } = useSession();
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,14 +27,14 @@ export default function AIPoliciesPage() {
   const [translatedDSL, setTranslatedDSL] = useState("");
 
   useEffect(() => {
-    if (session) {
-      loadPolicies();
-    }
-  }, [session]);
+    loadPolicies();
+  }, []);
 
   const loadPolicies = async () => {
     try {
-      const data = await apiWithSession<Policy[]>("/api/ai/policies", session);
+      const response = await fetch("/api/ai/policies");
+      if (!response.ok) throw new Error("Failed to load policies");
+      const data = await response.json();
       setPolicies(data);
     } catch (error) {
       console.error("Failed to load policies:", error);
@@ -51,14 +48,15 @@ export default function AIPoliciesPage() {
     
     setTranslating(true);
     try {
-      const data = await apiWithSession<{ dsl: string }>(
-        "/api/ai/policies/translate",
-        session,
-        {
-          method: "POST",
-          body: JSON.stringify({ natural_language: newPolicy.natural_language }),
-        }
-      );
+      const response = await fetch("/api/ai/policies/translate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ natural_language: newPolicy.natural_language }),
+      });
+      if (!response.ok) throw new Error("Failed to translate policy");
+      const data = await response.json();
       setTranslatedDSL(data.dsl);
     } catch (error) {
       alert("Failed to translate policy");
@@ -72,8 +70,11 @@ export default function AIPoliciesPage() {
     if (!newPolicy.name.trim() || !translatedDSL) return;
     
     try {
-      await apiWithSession("/api/ai/policies", session, {
+      const response = await fetch("/api/ai/policies", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           name: newPolicy.name,
           description: newPolicy.description,
@@ -83,6 +84,7 @@ export default function AIPoliciesPage() {
           priority: 100,
         }),
       });
+      if (!response.ok) throw new Error("Failed to create policy");
       
       setShowCreateModal(false);
       setNewPolicy({ name: "", description: "", natural_language: "" });

@@ -1,8 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { apiWithSession } from "@/lib/api";
 
 interface AuditLog {
   id: number;
@@ -14,23 +12,19 @@ interface AuditLog {
 }
 
 export default function AdminAuditPage() {
-  const { data: session } = useSession();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(50);
 
   useEffect(() => {
-    if (session) {
-      loadLogs();
-    }
-  }, [session, limit]);
+    loadLogs();
+  }, [limit]);
 
   const loadLogs = async () => {
     try {
-      const data = await apiWithSession<{ logs: AuditLog[] }>(
-        `/api/admin/audit?limit=${limit}`,
-        session
-      );
+      const response = await fetch(`/api/admin/audit?limit=${limit}`);
+      if (!response.ok) throw new Error("Failed to load audit logs");
+      const data = await response.json();
       setLogs(data.logs);
     } catch (error) {
       console.error("Failed to load audit logs:", error);
@@ -41,7 +35,9 @@ export default function AdminAuditPage() {
 
   const handleExport = async () => {
     try {
-      const data = await apiWithSession<any>("/api/admin/audit/export", session);
+      const response = await fetch("/api/admin/audit/export");
+      if (!response.ok) throw new Error("Failed to export logs");
+      const data = await response.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], {
         type: "application/json",
       });

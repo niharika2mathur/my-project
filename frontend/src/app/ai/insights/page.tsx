@@ -1,8 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { apiWithSession } from "@/lib/api";
 
 interface Insight {
   title: string;
@@ -14,20 +12,19 @@ interface Insight {
 }
 
 export default function AIInsightsPage() {
-  const { data: session } = useSession();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (session) {
-      loadInsights();
-    }
-  }, [session]);
+    loadInsights();
+  }, []);
 
   const loadInsights = async () => {
     try {
-      const data = await apiWithSession<Insight[]>("/api/ai/insights", session);
+      const response = await fetch("/api/ai/insights");
+      if (!response.ok) throw new Error("Failed to load insights");
+      const data = await response.json();
       setInsights(data);
     } catch (error) {
       console.error("Failed to load insights:", error);
@@ -39,9 +36,10 @@ export default function AIInsightsPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      await apiWithSession("/api/ai/insights/generate", session, {
+      const response = await fetch("/api/ai/insights/generate", {
         method: "POST",
       });
+      if (!response.ok) throw new Error("Failed to generate insights");
       await loadInsights();
     } catch (error) {
       alert("Failed to generate insights");

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useSession, signOut } from "next-auth/react";
 import AIManager from "@/components/ai/AIManager";
 
 export default function Header() {
-  const { data: session } = useSession();
   const [showAIManager, setShowAIManager] = useState(false);
 
   return (
@@ -51,16 +49,10 @@ export default function Header() {
         
         <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
           <div className="text-right">
-            <p className="font-medium text-slate-800 text-sm">{session?.user?.email || "User"}</p>
-            <button
-              onClick={() => signOut()}
-              className="text-xs text-slate-500 hover:text-slate-700"
-            >
-              Sign out
-            </button>
+            <p className="font-medium text-slate-800 text-sm">User</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-[var(--sidebar-bg)] flex items-center justify-center text-white font-semibold text-sm">
-            {session?.user?.email?.[0].toUpperCase() || "U"}
+            U
           </div>
         </div>
       </header>

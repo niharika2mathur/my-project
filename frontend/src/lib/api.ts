@@ -19,14 +19,3 @@ export async function api<T>(
   }
   return res.json() as Promise<T>;
 }
-
-export async function apiWithSession<T>(
-  path: string,
-  session: any,
-  options?: RequestInit
-): Promise<T> {
-  return api<T>(path, {
-    ...options,
-    token: session?.accessToken,
-  });
-}

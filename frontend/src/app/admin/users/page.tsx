@@ -1,8 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { apiWithSession } from "@/lib/api";
 
 interface User {
   id: number;
@@ -15,22 +13,21 @@ interface User {
 }
 
 export default function AdminUsersPage() {
-  const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"all" | "pending">("all");
 
   useEffect(() => {
-    if (session) {
-      loadUsers();
-      loadPendingUsers();
-    }
-  }, [session]);
+    loadUsers();
+    loadPendingUsers();
+  }, []);
 
   const loadUsers = async () => {
     try {
-      const data = await apiWithSession<User[]>("/api/admin/users", session);
+      const response = await fetch("/api/admin/users");
+      if (!response.ok) throw new Error("Failed to load users");
+      const data = await response.json();
       setUsers(data);
     } catch (error) {
       console.error("Failed to load users:", error);
@@ -41,7 +38,9 @@ export default function AdminUsersPage() {
 
   const loadPendingUsers = async () => {
     try {
-      const data = await apiWithSession<User[]>("/api/admin/users/pending", session);
+      const response = await fetch("/api/admin/users/pending");
+      if (!response.ok) throw new Error("Failed to load pending users");
+      const data = await response.json();
       setPendingUsers(data);
     } catch (error) {
       console.error("Failed to load pending users:", error);
@@ -52,9 +51,10 @@ export default function AdminUsersPage() {
     if (!confirm("Approve this user?")) return;
     
     try {
-      await apiWithSession(`/api/admin/users/${userId}/approve`, session, {
+      const response = await fetch(`/api/admin/users/${userId}/approve`, {
         method: "POST",
       });
+      if (!response.ok) throw new Error("Failed to approve user");
       await loadUsers();
       await loadPendingUsers();
     } catch (error) {
@@ -67,9 +67,10 @@ export default function AdminUsersPage() {
     if (!confirm("Reject this user? This action cannot be undone.")) return;
     
     try {
-      await apiWithSession(`/api/admin/users/${userId}/reject`, session, {
+      const response = await fetch(`/api/admin/users/${userId}/reject`, {
         method: "POST",
       });
+      if (!response.ok) throw new Error("Failed to reject user");
       await loadUsers();
       await loadPendingUsers();
     } catch (error) {

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import { apiWithSession } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -18,14 +16,13 @@ interface AIManagerProps {
 }
 
 export default function AIManager({ isOpen, onClose }: AIManagerProps) {
-  const { data: session } = useSession();
   const pathname = usePathname();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-    if (!input.trim() || loading || !session) return;
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
@@ -33,22 +30,24 @@ export default function AIManager({ isOpen, onClose }: AIManagerProps) {
     setLoading(true);
 
     try {
-      const response = await apiWithSession<Message>(
-        "/api/ai/chat",
-        session,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            messages: [...messages, userMessage].map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-            current_page: pathname,
-          }),
-        }
-      );
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          current_page: pathname,
+        }),
+      });
 
-      setMessages((prev) => [...prev, response]);
+      if (!response.ok) throw new Error("Chat request failed");
+      
+      const data = await response.json();
+      setMessages((prev) => [...prev, data]);
     } catch (error) {
       console.error("Chat error:", error);
       setMessages((prev) => [
