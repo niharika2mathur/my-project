@@ -38,6 +38,7 @@ const navItems = [
   { href: "/admin/audit", label: "Audit Logs", icon: AuditIcon },
   { href: "/ai/policies", label: "AI Policies", icon: PolicyIcon },
   { href: "/ai/insights", label: "AI Insights", icon: InsightsIcon },
+  { href: "/internship", label: "Internship Agent", icon: InternshipIcon },
   { href: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -99,6 +100,14 @@ function ChevronIcon({ collapsed }: { collapsed: boolean }) {
       stroke="currentColor"
     >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+    </svg>
+  );
+}
+
+function InternshipIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   );
 }
